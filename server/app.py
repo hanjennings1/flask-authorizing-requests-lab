@@ -84,16 +84,38 @@ class CheckSession(Resource):
         
         return {}, 401
 
+
 class MemberOnlyIndex(Resource):
-    
     def get(self):
-        pass
+        # Use the session to find if the user is logged in or not.
+        if not session.get('user_id'):
+            #If a user is not signed in, the get() methods in each view should return a status code of 401 unauthorized, along with an error message.
+            return {'error': 'Unauthorized'}, 401
+        
+        # User is logged in: query only the articles marked as member-only.
+        articles = Article.query.filter(Article.is_member_only == True).all()
+        # Convert each Article object into a JSON-ready dictionary.
+        articles_json = [ArticleSchema().dump(article) for article in articles]
+        # Return the list of member-only articles with a 200 OK status.
+        return articles_json, 200
+
 
 class MemberOnlyArticle(Resource):
-    
     def get(self, id):
-        pass
+        # Use the session to find if the user is logged in or not.
+        if not session.get('user_id'):
+            # Not logged in: return 401 Unauthorized with an error message.
+            return {'error': 'Unauthorized'}, 401
 
+        # User is logged in: find the single article whose id matches the URL.
+        articles = Article.query.filter(Article.is_member_only == True).all()
+        # Convert the Article object into a JSON-ready dictionary.
+        articles_json = [ArticleSchema().dump(article) for article in articles]
+        # Return the article with a 200 OK status.
+        return articles_json, 200
+
+
+        
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
 api.add_resource(ShowArticle, '/articles/<int:id>', endpoint='show_article')
