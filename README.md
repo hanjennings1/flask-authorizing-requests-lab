@@ -1,123 +1,90 @@
 # Lab: Authorizing Requests
+**Completed Sept 27, 2026** 
 
-## Scenario
-
-In this lab, we'll continue working on the blog site, and add some features that
-only logged in users have access to.
-
-## Tools & Resources
-
-- [GitHub Repo](https://github.com/learn-co-curriculum/flask-authorizing-requests-lab)
-- [What is Authentication? - auth0](https://auth0.com/intro-to-iam/what-is-authentication)
-- [API - Flask: class flask.session](https://flask.palletsprojects.com/en/2.2.x/api/#flask.session)
-
-## Set Up
-
-There is some starter code in place for a Flask API backend and a React frontend.
-To get set up, run:
-
+A Flask API and React blog app that restricts member-only articles to logged-in users. Visitors who are not signed in receive a `401 Unauthorized` response, and signed-in users can browse and read the full member-only content.
+ 
+![Completed Flask authorization lab](flask-authorization-lab.png)
+ 
+## Description
+ 
+This project builds on a blog site that already has a basic login feature. It adds **authorization**, which controls what a user is allowed to access after they log in.
+ 
+- **Authentication** answers "Who are you?" When a user logs in, the server stores their `user_id` in the Flask `session`.
+- **Authorization** answers "Are you allowed to see this?" Before returning member-only content, the server checks the session for a logged-in user.
+Each article has an `is_member_only` attribute. Two views, `MemberOnlyIndex` and `MemberOnlyArticle`, use a guard clause that checks `session.get('user_id')`. If no user is logged in, the view stops and returns an error with a `401` status. Otherwise, it returns the requested article data with a `200` status.
+ 
+## Features
+ 
+- Log in and log out using session-based authentication
+- Session persistence across page refreshes
+- Member-only article index that returns only articles where `is_member_only` is `True`
+- Member-only article detail view that returns a single article by ID
+- `401 Unauthorized` responses with an error message for users who are not logged in
+- Page view limit on regular articles for visitors who are not logged in
+## API Endpoints
+ 
+| Method | Endpoint | Description | Auth Required |
+| ------ | -------- | ----------- | ------------- |
+| GET | `/articles` | List all articles | No |
+| GET | `/articles/<id>` | Show one article (3-view limit when logged out) | No |
+| POST | `/login` | Log in with a username | No |
+| DELETE | `/logout` | Log out the current user | No |
+| GET | `/check_session` | Return the currently logged-in user | Yes |
+| GET | `/members_only_articles` | List all member-only articles | Yes |
+| GET | `/members_only_articles/<id>` | Show one article by ID | Yes |
+ 
+## Installation
+ 
+Requirements: Python 3, Pipenv, Node.js, and npm.
+ 
+From the project root folder:
+ 
 ```bash
-pipenv install; pipenv shell
+pipenv install
+pipenv shell
 npm install --prefix client
 cd server
 flask db upgrade
 python seed.py
 ```
-
-You can work on this lab by running the tests with `pytest -x`. It will also be
-helpful to see what's happening during the request/response cycle by running the
-app in the browser. You can run the Flask server with:
-
+ 
+## Usage
+ 
+Start the Flask server from the `server` folder:
+ 
 ```bash
 python app.py
 ```
-
-And you can run React in another terminal from the root project directory with:
-
+ 
+The API runs on `http://localhost:5555`.
+ 
+In a second terminal, start the React client from the project root folder:
+ 
 ```bash
 npm start --prefix client
 ```
-
-You don't have to make any changes to the React code to get this lab working.
-
-## Instructions
-
-### Task 1: Define the Problem
-
-Now that we've got the basic login feature working, we need to reward our logged
-in users with some bonus content that only users who have logged in will be able
-to access.
-
-### Task 2: Determine the Design
-
-We added a new attribute to our articles, `is_member_only`, to reflect whether
-the article should only be available to authorized users of the site. We also
-created two new views: `MemberOnlyIndex` and `MemberOnlyArticle`.
-
-Your goal is to add the following functionality to the new views:
-
-- If a user is not signed in, the `get()` methods in each view should return a
-  status code of 401 unauthorized, along with an error message.
-- If the user is signed in, the `get()` methods in each view should return the
-  JSON data for the members-only articles and the members-only article by ID, respectively.
-
-### Task 3: Develop, Test, and Refine the Code
-
-#### Step 1: Check Current User for Authorization
-
-Use the `session` to find if the user is logged in or not.
-
-#### Step 2: Update Logic and Response if User is Authorized
-
-If a user is not signed in, the `get()` methods in each view should return a
-status code of 401 unauthorized, along with an error message.
-
-#### Step 3: Update Logic and Response if User is not Authorized
-
-If a user is not signed in, the `get()` methods in each view should return a
-status code of 401 unauthorized, along with an error message.
-
-#### Step 4: Test and Refine the Code
-
-Run the test suite:
-
-```bash
-pytest
+ 
+Log in with a seeded username to access the member-only articles. To find a username, run `flask shell` in the `server` folder and enter:
+ 
+```python
+User.query.first().username
 ```
-
-If any tests aren't passing, refine your code using each error message.
-
-View the app in browser and test login, logout, and session persistence. Refine code if needed.
-
-Feel free to also take a look at how the frontend logic is set up to use these endpoints.
-
-#### Step 5: Commit and Push Git History
-
-* Commit and push your code:
-
+ 
+## Running Tests
+ 
+From the `server` folder, with the Pipenv shell active:
+ 
 ```bash
-git add .
-git commit -m "final solution"
-git push
+pytest -x
 ```
-
-* If you created a separate feature branch, remember to open a PR on main and merge.
-
-### Task 4: Document and Maintain
-Best Practice documentation steps:
-* Add comments to the code to explain purpose and logic, clarifying intent and functionality of your code to other developers.
-* Update README text to reflect the functionality of the application following https://makeareadme.com. 
-  * Add screenshot of completed work included in Markdown in README.
-* Delete any stale branches on GitHub
-* Remove unnecessary/commented out code
-* If needed, update git ignore to remove sensitive data
-
-## Important Submission Note
-
-Before you submit your solution, you need to save your progress with git.
-
-1. Add your changes to the staging area by executing `git add .`.
-2. Create a commit by executing `git commit -m "Your commit message"`.
-3. Push your commits to GitHub by executing `git push origin main`.
-
-CodeGrade will grade your lab using the same tests as are provided in the `testing/` directory.
+ 
+The test suite confirms that:
+ 
+- Logged-in users can access `/members_only_articles` (200), and logged-out users cannot (401)
+- `/members_only_articles` returns only member-only articles
+- Logged-in users can access `/members_only_articles/<id>` (200), and logged-out users cannot (401)
+## Technologies Used
+ 
+- **Backend:** Python, Flask, Flask-RESTful, Flask-SQLAlchemy, Flask-Migrate, Marshmallow, SQLite
+- **Frontend:** React
+- **Testing:** pytest
