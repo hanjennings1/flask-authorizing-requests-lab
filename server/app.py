@@ -84,16 +84,23 @@ class CheckSession(Resource):
         
         return {}, 401
 
+
 class MemberOnlyIndex(Resource):
-    
     def get(self):
-        pass
+        # Use the session to find if the user is logged in or not.
+        if not session.get('user_id'):
+            #If a user is not signed in, the get() methods in each view should return a status code of 401 unauthorized, along with an error message.
+            return {'error': 'Unauthorized'}, 401
+
 
 class MemberOnlyArticle(Resource):
-    
     def get(self, id):
-        pass
+        # Use the session to find if the user is logged in or not.
+        if not session.get('user_id'):
+            # Not logged in: return 401 Unauthorized with an error message.
+            return {'error': 'Unauthorized'}, 401
 
+        
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
 api.add_resource(ShowArticle, '/articles/<int:id>', endpoint='show_article')
